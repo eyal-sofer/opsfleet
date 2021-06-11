@@ -1,12 +1,12 @@
 provider "aws" {
-  region = "eu-central-1"
+  region = "us-east-1"
 }
 
 locals {
-  name = "example"
+  cluster_name = "my-eks-cluster"
 
   tags = {
-    Project   = "Terraform K8s Example Cluster"
+    Project   = "Terraform K8S EKS Cluster"
     Terraform = "True"
   }
 }
@@ -20,7 +20,7 @@ data "aws_subnet_ids" "default" {
 }
 
 resource "aws_iam_role" "cluster" {
-  name_prefix = "eks-cluster-${local.name}-"
+  cluster_name = local.cluster_name
 
   assume_role_policy = jsonencode({
     Statement = [{
@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "cluster_eks_cluster_policy" {
   role       = aws_iam_role.cluster.name
 }
 
-# Optionally, enable Security Groups for Pods
+# enable Security Groups for Pods
 # Reference: https://docs.aws.amazon.com/eks/latest/userguide/security-groups-for-pods.html
 resource "aws_iam_role_policy_attachment" "cluster_eks_vpc_resource_controller" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
@@ -51,16 +51,15 @@ resource "aws_iam_role_policy_attachment" "cluster_eks_vpc_resource_controller" 
 }
 
 resource "aws_eks_cluster" "cluster" {
-  name     = local.name
+  name     = local.cluster_name
   role_arn = aws_iam_role.cluster.arn
-  version  = "1.18"
 
   vpc_config {
     subnet_ids = data.aws_subnet_ids.default.ids
   }
 
   # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
-  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
+  
   depends_on = [
     aws_iam_role_policy_attachment.cluster_eks_cluster_policy,
     aws_iam_role_policy_attachment.cluster_eks_vpc_resource_controller,
@@ -70,7 +69,7 @@ resource "aws_eks_cluster" "cluster" {
 }
 
 resource "aws_iam_role" "nodes" {
-  name_prefix = "eks-nodes-${local.name}-"
+  name_prefix = local.cluster_name
 
   assume_role_policy = jsonencode({
     Statement = [{
@@ -114,7 +113,7 @@ resource "aws_eks_node_group" "nodes" {
   }
 
   # I'd recommend t3.large or t3.xlarge for most production workloads
-  instance_types = ["t3.medium"]
+  instance_types = ["t3.micro"]
 
   # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
   # Otherwise, EKS will not be able to properly delete EC2 Instances and Elastic Network Interfaces.
