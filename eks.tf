@@ -20,7 +20,7 @@ data "aws_subnet_ids" "default" {
 }
 
 resource "aws_iam_role" "cluster" {
-  cluster_name = local.cluster_name
+  name_prefix = "eks-cluster-${local.cluster_name}"
 
   assume_role_policy = jsonencode({
     Statement = [{
@@ -69,7 +69,7 @@ resource "aws_eks_cluster" "cluster" {
 }
 
 resource "aws_iam_role" "nodes" {
-  name_prefix = local.cluster_name
+  name_prefix = "eks-nodes-${local.cluster_name}"
 
   assume_role_policy = jsonencode({
     Statement = [{
