@@ -2,6 +2,7 @@ provider "aws" {
   region = "us-east-1a"
 }
 
+
 locals {
   cluster_name = "my-eks-cluster"
 
