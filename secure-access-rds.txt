@@ -1,0 +1,12 @@
+Answer
+what i think is the best answer to this is creating security groups for pods.
+that way, we can grant acess to external aws services - such as RDS - just to some pods which needs it, that are running on the same K8S worker nodes. 
+what we will need to do (assuming EKS and RDS are already up and running):
+* create a security group for pods which needs access to RDS 
+* Enable pods ENI
+* create service account for pods which needs access to RDS 
+* create security group policy (SGP) which contains two security groups: one is the EKS SG which enables pods comunication inside the cluster, and the seccond 
+one which we crated for pods which needs RDS access.
+* Finally, when we create a pod which needs RDS access, we will add in it's definition yaml, in the spec section, the service account which we created.
+
+referrence to the docs i used: https://aws.amazon.com/blogs/containers/introducing-security-groups-for-pods/ 
